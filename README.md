@@ -1,25 +1,37 @@
 # Kreativ Founder Klub
 
-En Next.js-app, der demonstrerer et komplet login-flow med Supabase Auth. Brugere kan oprette en konto, bekræfte deres e-mail, logge ind, besøge et beskyttet dashboard og logge ud igen.
+Kreativ Founder Klub er et konceptuelt medlemsunivers designet og udviklet som portfolio-projekt. Appen demonstrerer et komplet brugerflow med kontooprettelse, Zod-validering, Supabase Auth, e-mailbekræftelse, et beskyttet dashboard og en offentlig realtime-chat.
 
-## Funktioner
+Projektet er en teknisk demo — ikke et aktivt medlemskab eller et færdigt community-produkt.
+
+## Det demonstrerer projektet
 
 - Oprettelse af bruger med e-mail og adgangskode
-- E-mailbekræftelse via Supabase Auth
-- Login og logout
-- Beskyttet dashboard
-- Session-håndtering med cookies
-- Responsiv header, footer og auth-sider
+- Feltvalidering og konkrete fejlbeskeder med Zod
+- Profiloplysninger gemt som Supabase Auth-metadata
+- E-mailbekræftelse og redirect tilbage til appen
+- Login, logout og session-håndtering med cookies
+- Beskyttet dashboard med servervalideret bruger
+- Offentlig chatdemo med PostgreSQL og Supabase Realtime
+- Row Level Security på chat-tabellen
+- Responsivt interface udviklet med Tailwind CSS
+
+## Min rolle
+
+**End-to-end produktdesign og frontendudvikling** — fra koncept, UX/UI og visuel identitet til implementering, integration og færdigt brugerflow.
+
+Projektet er udviklet AI-assisteret og agentisk. Jeg har omsat behov til konkrete opgaver og kvalitetssikret resultatet gennem kodegennemgang, test og debugging.
 
 ## Teknologier
 
 - [Next.js 16](https://nextjs.org/) med App Router
 - [React 19](https://react.dev/)
-- [Supabase](https://supabase.com/) til authentication
-- [Tailwind CSS 4](https://tailwindcss.com/)
 - TypeScript
+- [Supabase](https://supabase.com/) Auth, PostgreSQL og Realtime
+- [Zod](https://zod.dev/) til validering
+- [Tailwind CSS 4](https://tailwindcss.com/)
 
-## Kom godt i gang
+## Lokal opsætning
 
 ### 1. Klon projektet
 
@@ -45,35 +57,52 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=din_supabase_publishable_key
 
 Værdierne findes i Supabase under **Connect → API Keys**.
 
-> `.env.local` er ignoreret af Git og må ikke committes. Tilføj aldrig en `service_role`-nøgle til klientkode.
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` er beregnet til browseren. Sikkerheden håndhæves med Auth og Row Level Security. Tilføj aldrig en `service_role`-nøgle eller en `sb_secret_...`-nøgle til klientkode eller en variabel, der begynder med `NEXT_PUBLIC_`.
 
-### 4. Konfigurer Supabase Auth
+`.env.local` er ignoreret af Git og må ikke committes.
+
+### 4. Opret chat-tabellen
+
+Kør SQL-filen [`supabase/migrations/20261011160000_create_demo_messages.sql`](supabase/migrations/20261011160000_create_demo_messages.sql) i Supabase SQL Editor.
+
+Migrationen:
+
+- opretter tabellen `demo_messages`
+- aktiverer Row Level Security
+- tillader offentlig læsning og indsættelse af korte demobeskeder
+- begrænser navn og beskedlængde i databasen
+- tilføjer tabellen til Supabase Realtime
+
+Chatten er bevidst offentlig, så besøgende kan afprøve funktionen uden en konto. Den bør have rate limiting og strengere adgangskontrol, før samme mønster bruges i et produktionscommunity.
+
+### 5. Konfigurer Supabase Auth
 
 I Supabase-dashboardet:
 
 1. Gå til **Authentication → Sign In / Providers**.
 2. Kontrollér, at **Email** og **Allow new users to sign up** er aktiveret.
 3. Aktivér **Confirm email**, hvis brugerne skal bekræfte deres adresse.
-4. Tilføj appens URL under **Authentication → URL Configuration**.
+4. Tilføj appens URL og `/auth/confirm` under **Authentication → URL Configuration**.
 
-Supabases indbyggede mailtjeneste er kun beregnet til udvikling. Opsæt egen SMTP under **Authentication → Emails → SMTP Settings**, før appen bruges i produktion.
+Supabases indbyggede mailtjeneste er beregnet til udvikling og test. Opsæt egen SMTP, før appen bruges i produktion.
 
-### 5. Start udviklingsserveren
+### 6. Start udviklingsserveren
 
 ```bash
 npm run dev
 ```
 
-Åbn [http://localhost:3000](http://localhost:3000). Hvis port 3000 allerede bruges, vælger Next.js automatisk en anden port, eksempelvis 3001.
+Åbn [http://localhost:3000](http://localhost:3000). Hvis port 3000 allerede bruges, vælger Next.js automatisk en anden port.
 
 ## Ruter
 
 | Rute | Beskrivelse |
 | --- | --- |
-| `/` | Forside |
-| `/signup` | Opret en konto |
+| `/` | Forside og offentlig chatdemo |
+| `/signup` | Opret konto og profiloplysninger |
 | `/login` | Log ind |
-| `/dashboard` | Beskyttet side for brugere med en aktiv session |
+| `/auth/confirm` | Håndterer bekræftelseslink fra Supabase |
+| `/dashboard` | Beskyttet medlemsområde |
 
 ## Scripts
 
@@ -89,23 +118,41 @@ npm run lint    # Kør ESLint
 ```text
 src/
 ├── app/
-│   ├── components/       # Formularer og fælles layout
-│   ├── dashboard/        # Beskyttet dashboard
-│   ├── login/            # Login-side
-│   └── signup/           # Signup-side
-├── lib/supabase/         # Browser-, server- og session-klienter
-└── proxy.ts              # Opdaterer Supabase-sessionen
+│   ├── auth/confirm/       # E-mailbekræftelse
+│   ├── components/         # Formularer, chat og fælles UI
+│   ├── dashboard/          # Beskyttet medlemsområde
+│   ├── login/              # Login-side
+│   └── signup/             # Kontooprettelse
+├── lib/
+│   ├── supabase/           # Browser-, server- og session-klienter
+│   └── validation.ts       # Zod-schemaer
+└── proxy.ts                # Opdaterer Supabase-sessionen
+
+supabase/
+└── migrations/             # Databaseændringer og RLS-politikker
 ```
 
-## Test af login-flowet
+## Test brugerflowet
 
-1. Åbn `/signup` og opret en bruger.
-2. Bekræft adressen via e-mailen fra Supabase.
-3. Kontrollér brugeren under **Authentication → Users**.
-4. Log ind på `/login`.
-5. Kontrollér, at `/dashboard` åbner.
+1. Opret en bruger på `/signup`.
+2. Kontrollér, at ugyldige felter giver Zod-fejl.
+3. Bekræft adressen via e-mailen fra Supabase.
+4. Kontrollér brugeren under **Authentication → Users**.
+5. Log ind og kontrollér, at `/dashboard` åbner.
 6. Log ud og kontrollér, at dashboardet igen kræver login.
+7. Åbn forsiden i to faner og kontrollér, at nye chatbeskeder vises realtime.
+
+## Deployment
+
+Ved deployment på eksempelvis Netlify skal de samme to miljøvariabler tilføjes til hostingmiljøet. Produktionsdomænet og den fulde callback-URL skal samtidig tilføjes til Supabase Auth:
+
+```text
+https://dit-domæne.dk
+https://dit-domæne.dk/auth/confirm
+```
+
+Kør `npm run build` før deployment for at kontrollere TypeScript og produktions-buildet.
 
 ## Licens
 
-Projektet er privat og har endnu ikke en offentlig licens.
+Projektet er en offentlig portfolio-case og har endnu ikke en open source-licens. Kode og visuelt materiale må derfor ikke genbruges uden tilladelse.

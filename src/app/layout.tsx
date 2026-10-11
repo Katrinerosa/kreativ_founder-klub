@@ -15,14 +15,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kreativ Founder Klub",
-  description: "Et fællesskab for kreative founders.",
+  title: {
+    default: "Kreativ Founder Klub",
+    template: "%s | Kreativ Founder Klub",
+  },
+  description: "Et fællesskab for kreative founders, der vil skabe stort og stå sammen.",
+  icons: {
+    icon: "/wolfiefavicon.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="da"
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-dvh flex-col">
